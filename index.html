@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Wizardle</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+var config = {
+    type: Phaser.AUTO,
+    width: 1600,
+    height: 900,
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+
+class Chicken {
+    constructor (chicken_type, starting_node, start_offset) {
+        this.currentNode = starting_node;
+        this.startOffset = start_offset;
+        this.nodeProgress = 0; // Where at in the current node. Ticked up by 1 each update step
+        if (chicken_type == 0) {
+            // baby chick
+        }
+        else if (chicken_type == 1) {
+            // hen
+            this.weight = true; // Can depress pressure plates
+            this.tunnel = false; // Can fit in small tunnels
+            this.speed = 5; // 5 units per step, so that baby chick can be slower
+        }
+        else if (chicken_type == 2) {
+            // rooster
+        }
+    }
+}
+
+class Node {
+    constructor (id, length, trigger_flag, flag_state, forward_nodes) {
+        this.id = id;
+        this.length = length;
+        this.triggerFlag = trigger_flag; // Does this node set a flag?
+        this.checkFlag = check_flag; // Which node does this check the flag of?
+        // We might have multiple trigger_flags in the future, and also need to check conditions
+        this.flagState = flag_state;
+        this.forwardNodes = forward_nodes; // array of forward-connecting nodes. flag_state indexes the appropriate node
+    }
+}
+
+class MapGraph {
+    constructor () {
+        this.nodes = [];
+    }
+
+    addNode(my_node) {
+        this.nodes.push(my_node);
+    }
+}
+
+var game_over = false;
+var graph = new MapGraph();
+var game = new Phaser.Game(config);
+var chickens = [];
+
+function preload () {
+    this.load.image('mountain', 'assets/mountain_small.jpg');
+}
+
+
+function create () {
+    graph.addNode(new Node(0, 20, false, -1, 0, [1]));
+    graph.addNode(new Node(1, 10, true, -1, 0, [2]));
+    graph.addNode(new Node(2, 40, false, -1, 0, [8]));
+    graph.addNode(new Node(3, 30, false, -1, 0, [4, 3]));
+    graph.addNode(new Node(4, 10, false, 1, 0, [5]));
+    graph.addNode(new Node(5, 10, false, -1, 0, [6]));
+    graph.addNode(new Node(6, 10, true, -1, 0, [7]));
+    graph.addNode(new Node(7, 10, false, -1, 0, [8]));
+    graph.addNode(new Node(8, 30, false, -1, 0, [9]));
+    graph.addNode(new Node(9, 10, false, -1, 0, [10]));
+    graph.addNode(new Node(10, 60, false, -1, 0, [11, 10]));
+    graph.addNode(new Node(11, 10, false, 6, 0, [12]));
+    graph.addNode(new Node(12, 30, false, -1, 0, [9]));
+
+    chickens.push(new Chicken(1, 0));
+    chickens.push(new Chicken(4, 0));
+    chickens.push(new Chicken(11, 0));
+}
+
+function update () {
+
+    // Send out virtual chickens to evaluate triggers at the end of this step
+    for (let i = 0; i < chickens.length; i++) {
+        // Increment node_progress and handle any flags or events
+        if (chicken[i].node_progress + chicken[i].speed >= chicken[i].current_node.length) {
+            // Set valid triggers at next node, unset triggers from previous node if no other chickens there. There is an ambiguous condition here to make a decision on I think
+        }
+        chicken[i].node_progress += chicken[i].speed;
+
+        current_node = graph[chicken[i].currentNode]; // FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
+        if (chicken[i].node_progress >= current_node.length) {
+            chicken[i].currentNode = current_node.forwardNodes[current_node.flag_state];
+        }
+
+    // Now send out the real chickens, so that flags and triggers do not inhibit valid actions
+    for (let i = 0; i < chickens.length; i++) {
+        // Increment node_progress and handle any flags or events
+        chicken[i].node_progress += chicken[i].speed;
+
+        current_node = graph[chicken[i].currentNode]; // FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
+        if (chicken[i].node_progress >= current_node.length) {
+            chicken[i].currentNode = current_node.forwardNodes[current_node.flag_state];
+        }
+    }
+
+    if (game_over) {
+        return;
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 class Chicken:
     def __init__(self, chicken_type, starting_node, start_offset):
+        self.complete = False
         self.currentNode = starting_node
         self.startOffset = start_offset
         self.nodeProgress = 0 # Where at in the current node. Ticked up by 1 each update step
@@ -22,7 +23,7 @@ class Node:
         self.triggerFlag = trigger_flag # Does this node set a flag?
         self.checkFlag = check_flag # Which node does this check the flag of?
         # We might have multiple trigger_flags in the future, and also need to check conditions
-        self.flagState = flag_state  # Is this definitionally 0 by default?
+        self.flagState = flag_state  # Is this definitionally 0 by default
         self.forwardNodes = forward_nodes # array of forward-connecting nodes. flag_state indexes the appropriate node
         self.node_type = node_type
 
@@ -74,10 +75,9 @@ def main():
             for chicken in chickens:
                 # Send out virtual chickens until flags and triggers converge
                 nextNodeIdx = graph.nodes[chicken.currentNode].forwardNodes[graph.nodes[chicken.currentNode].flagState]
-                nodeLen = graph.nodes[chicken.currentNode]
+                nodeLen = graph.nodes[chicken.currentNode].distance
                 triggerFlag = graph.nodes[nextNodeIdx].triggerFlag
-                if (chicken.nodeProgress + chicken.speed) >= nodeLen and triggerFlag:
-                    import pdb;pdb.set_trace()
+                if triggerFlag and graph.nodes[nextNodeIdx].flagState == 0 and (chicken.nodeProgress + chicken.speed) >= nodeLen:
                     # Set valid triggers at next node, unset triggers from previous node if no other chickens there. There is an ambiguous condition here to make a decision on I think
                     graph.nodes[nextNodeIdx].flagState = 1
                     graph.nodes[chicken.currentNode].flagState = 0
@@ -89,8 +89,19 @@ def main():
             chickens[i].nodeProgress += chickens[i].speed
 
             current_node = graph.nodes[chicken.currentNode] # FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
-            if (chickens[i].nodeProgress >= current_node.length):
-                chickens[i].currentNode = current_node.forwardNodes[current_node.flag_state]
+            if (chickens[i].nodeProgress >= current_node.distance):
+                chickens[i].currentNode = current_node.forwardNodes[current_node.flagState]
+                end_node = 12
+                if chickens[i].currentNode == end_node:
+                    chickens[i].complete = True
+                    chickens[i].speed = 0
+
+        # Check if the chickens are finished
+        game_over = True
+        for i in range(0, 3):
+            if chickens[i].complete is False:
+                game_over = False
+    print("The chickens solved the level!")
 
 
 if __name__ == "__main__":

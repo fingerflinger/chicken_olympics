@@ -99,27 +99,22 @@ function create () {
 
 function update () {
 
+    // Evalute each chicken step and if a flag change occurred due to a chicken move, reevaluate all chickens until no more flag changes occurr. Can we get an infinite loop here?
     // Send out virtual chickens to evaluate triggers at the end of this step
-    for (let i = 0; i < chickens.length; i++) {
-        // Increment node_progress and handle any flags or events
-        if (chicken[i].node_progress + chicken[i].speed >= chicken[i].current_node.length) {
-            // Set valid triggers at next node, unset triggers from previous node if no other chickens there. There is an ambiguous condition here to make a decision on I think
-        }
-        chicken[i].node_progress += chicken[i].speed;
+    var clean_flags = false; // Are our flag deltas clean for this iteration?
+    while (clean_flags == false) {
+        clean_flags = true;
+        for (let i = 0; i < chickens.length; i++) {
+            // Increment node_progress and handle any flags or events
+            if (chicken[i].node_progress + chicken[i].speed >= chicken[i].current_node.length) {
+                // Set valid triggers at next node, unset triggers from previous node if no other chickens there. There is an ambiguous condition here to make a decision on I think
+            }
+            chicken[i].node_progress += chicken[i].speed;
 
-        current_node = graph[chicken[i].currentNode]; // FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
-        if (chicken[i].node_progress >= current_node.length) {
-            chicken[i].currentNode = current_node.forwardNodes[current_node.flag_state];
-        }
-
-    // Now send out the real chickens, so that flags and triggers do not inhibit valid actions
-    for (let i = 0; i < chickens.length; i++) {
-        // Increment node_progress and handle any flags or events
-        chicken[i].node_progress += chicken[i].speed;
-
-        current_node = graph[chicken[i].currentNode]; // FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
-        if (chicken[i].node_progress >= current_node.length) {
-            chicken[i].currentNode = current_node.forwardNodes[current_node.flag_state];
+            current_node = graph[chicken[i].currentNode]; // FIXME, assuming node idx = node_id for now, but this will eventually break, I'm sure
+            if (chicken[i].node_progress >= current_node.length) {
+                chicken[i].currentNode = current_node.forwardNodes[current_node.flag_state];
+            }
         }
     }
 

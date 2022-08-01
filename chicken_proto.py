@@ -25,7 +25,7 @@ class Node:
         # We might have multiple trigger_flags in the future, and also need to check conditions
         self.flagState = flag_state  # Is this definitionally 0 by default
         self.forwardNodes = forward_nodes # array of forward-connecting nodes. flag_state indexes the appropriate node
-        self.node_type = node_type
+        self.nodeType = node_type
 
 class MapGraph:
     def __init__(self):
@@ -33,6 +33,55 @@ class MapGraph:
 
     def addNode(self, my_node):
         self.nodes.append(my_node)
+
+def render(my_graph, my_chickens):
+    # This is just going to be bespoke for my test levels at the
+    #   moment, until I have some time to acutally think about it properly
+    '''
+    0-1-2-8-9-13
+    3-4-5-6-7-8-9-13
+    10-11-12-9-13
+    chick1
+        node: 3
+        progress: 40
+        node_end:60
+    chick2
+        node: 10
+
+    chick3
+
+
+    '''
+    seen = []
+    print_str = ""
+    for node in my_graph.nodes:
+        # Assume sorted for now
+        if node.id in seen:
+           continue
+        print_str += str(node.id) + "-"
+        seen.append(node.id)
+        x = node
+        while (True):
+            if x.nodeType == "goal":
+                break
+            # FIXME only taking the first path right now, because we don't actually handle real graphs
+            if my_graph.nodes[x.forwardNodes[0]].id == x.id:
+                continue
+            print_str += str(x.id) + "-"
+            seen.append(x.id)
+            x = my_graph.nodes[x.forwardNodes[0]]
+        print_str += "\n"
+    print(print_str)
+
+    for i in range(0, len(my_chickens)):
+        chicken = my_chickens[i]
+        chicken_str = "chicken {}:\n  node:{}\n  node_progress:{}\n  node_end:{}\n".format(
+            i,
+            chicken.currentNode,
+            chicken.nodeProgress,
+            my_graph.nodes[chicken.currentNode].distance
+        )
+        print(chicken_str)
 
 
 def main():
@@ -42,17 +91,18 @@ def main():
 
     graph.addNode(Node(0, 20, False, -1, 0, [1], "path"))
     graph.addNode(Node(1, 10, True, -1, 0, [2], "plate"))
-    graph.addNode(Node(2, 40, False, -1, 0, [8], "path"))
+    graph.addNode(Node(2, 50, False, -1, 0, [8], "path"))
     graph.addNode(Node(3, 30, False, -1, 0, [4, 3], "gate"))
     graph.addNode(Node(4, 10, False, 1, 0, [5], "path"))
     graph.addNode(Node(5, 10, False, -1, 0, [6], "path"))
     graph.addNode(Node(6, 10, True, -1, 0, [7], "plate"))
     graph.addNode(Node(7, 10, False, -1, 0, [8], "path"))
     graph.addNode(Node(8, 30, False, -1, 0, [9], "path"))
-    graph.addNode(Node(9, 10, False, -1, 0, [10], "path"))
+    graph.addNode(Node(9, 10, False, -1, 0, [13], "path"))
     graph.addNode(Node(10, 60, False, -1, 0, [11, 10], "gate"))
     graph.addNode(Node(11, 10, False, 6, 0, [12], "path"))
-    graph.addNode(Node(12, 30, False, -1, 0, [9], "path"))
+    graph.addNode(Node(12, 10, False, -1, 0, [9], "path"))
+    graph.addNode(Node(13, 10, False, -1, 0, [], "goal"))
 
     chickens.append(Chicken(1, 0, 0))
     chickens.append(Chicken(1, 3, 0))
@@ -61,7 +111,7 @@ def main():
     while game_over is False:
         # Clear flags which do not exhibit hysteresis
         for i in range(0, len(graph.nodes)):
-            if graph.nodes[i].node_type != "toggle":
+            if graph.nodes[i].nodeType != "toggle":
                 graph.nodes[i].flagState = 0
         for chicken in chickens:
             # Re-set nodes according to current state
@@ -101,6 +151,11 @@ def main():
         for i in range(0, 3):
             if chickens[i].complete is False:
                 game_over = False
+
+        render(graph, chickens)
+        import pdb;pdb.set_trace()
+        # TODO wait for user input to see the next game step
+
     print("The chickens solved the level!")
 
 

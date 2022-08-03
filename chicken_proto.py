@@ -45,20 +45,20 @@ def render(my_graph, my_chickens):
         node: 3
         progress: 40
         node_end:60
+        [|||||||  ]
     chick2
         node: 10
 
+        [|||||||  ]
     chick3
 
-
-    '''
+'''
     seen = []
     print_str = ""
     for node in my_graph.nodes:
         # Assume sorted for now
         if node.id in seen:
            continue
-        print_str += str(node.id) + "-"
         seen.append(node.id)
         x = node
         while (True):
@@ -67,7 +67,14 @@ def render(my_graph, my_chickens):
             # FIXME only taking the first path right now, because we don't actually handle real graphs
             if my_graph.nodes[x.forwardNodes[0]].id == x.id:
                 continue
-            print_str += str(x.id) + "-"
+            # If a chicken is in this node, then colorize it
+            chicken_here = False
+            node_str = str(x.id) + "-"
+            for chicky in my_chickens:
+                if chicky.currentNode == x.id:
+                    node_str = '\033[92m' + str(x.id) + '\033[0m' + "-"
+
+            print_str += node_str
             seen.append(x.id)
             x = my_graph.nodes[x.forwardNodes[0]]
         print_str += "\n"
@@ -75,12 +82,17 @@ def render(my_graph, my_chickens):
 
     for i in range(0, len(my_chickens)):
         chicken = my_chickens[i]
+        node_len = my_graph.nodes[chicken.currentNode].distance
         chicken_str = "chicken {}:\n  node:{}\n  node_progress:{}\n  node_end:{}\n".format(
             i,
             chicken.currentNode,
             chicken.nodeProgress,
-            my_graph.nodes[chicken.currentNode].distance
+            node_len
         )
+        percent = int(10 * chicken.nodeProgress / node_len)  # in increments of 10%
+        progress_meter = ['['] + ['|' if x < percent else ' ' for x in range(0,10)] + [']']
+        progress_meter = ''.join(progress_meter)
+        chicken_str += progress_meter
         print(chicken_str)
 
 
